@@ -1153,7 +1153,7 @@
             }
         }
 
-        // Vue préparation
+        // Vue préparation avec Firebase
         function loadPrepView() {
             db.collection("orders")
                 .orderBy("timestamp", "asc")
@@ -1163,97 +1163,268 @@
                     snapshot.forEach(doc => {
                         orders.push({ id: doc.id, ...doc.data() });
                     });
-                    displayPrepView(orders);
+                    displayPrepMode(orders);
                 });
         }
 
-        function displayPrepView(orders) {
+        function displayPrepMode(orders) {
             const prepContent = document.getElementById('prepContent');
             
-            if (orders.length === 0) {
-                prepContent.innerHTML = '<p style="text-align: center; color: #999;">Aucune pizza à préparer</p>';
+            if (!orders || orders.length === 0) {
+                prepContent.innerHTML = '<p style="text-align: center; color: #999;">Aucune commande à préparer</p>';
                 return;
             }
+
+            // Trier les commandes : sans gluten en premier
+            orders.sort((a, b) => {
+                if (a.dough === 'sans-gluten' && b.dough !== 'sans-gluten') return -1;
+                if (a.dough !== 'sans-gluten' && b.dough === 'sans-gluten') return 1;
+                return 0;
+            });
+
+            // Afficher d'abord le résumé des ingrédients
+            const ingredientSummary = generateIngredientSummary(orders);
+            const specialNotes = orders.filter(o => o.notes).map((o, idx) => 
+                `<li><strong>${o.name} (Pizza #${orders.indexOf(o) + 1}):</strong> ${o.notes}</li>`
+            ).join('');
+
+            prepContent.innerHTML = `
+                <div class="prep-instruction" style="margin-bottom: 20px;">
+                    <h2>📊 Résumé des ingrédients</h2>
+                    <div style="text-align: left; margin: 15px 0;">
+                        ${ingredientSummary}
+                    </div>
+                </div>
+                ${specialNotes ? `
+                <div class="prep-instruction" style="margin-bottom: 20px;">
+                    <h2>📝 Instructions spéciales</h2>
+                    <ul style="text-align: left; margin: 15px 0;">
+                        ${specialNotes}
+                    </ul>
+                </div>
+                ` : ''}
+                <button class="btn-primary" onclick="startPrepSteps()">Commencer la préparation →</button>
+            `;
+        }
+
+        function generateIngredientSummary(orders) {
+            const summary = {};
             
-            // Grouper par type d'ingrédients
-            const ingredients = {
-                bases: {},
-                vegetables: {},
-                cheese: {},
-                meat: {},
-                extras: {}
-            };
-            
+            // Compter les pâtes
             orders.forEach(order => {
-                ingredients.bases[order.base] = (ingredients.bases[order.base] || 0) + 1;
-                
-                order.vegetables.forEach(veg => {
-                    ingredients.vegetables[veg] = (ingredients.vegetables[veg] || 0) + 1;
-                });
-                
-                order.cheese.forEach(ch => {
-                    ingredients.cheese[ch] = (ingredients.cheese[ch] || 0) + 1;
-                });
-                
-                order.meat.forEach(m => {
-                    ingredients.meat[m] = (ingredients.meat[m] || 0) + 1;
-                });
-                
-                order.extras.forEach(e => {
-                    ingredients.extras[e] = (ingredients.extras[e] || 0) + 1;
+                const doughName = order.dough === 'napolitaine' ? 'Pâte Napolitaine' : 'Pâte Sans gluten';
+                summary[doughName] = (summary[doughName] || 0) + 1;
+            });
+            
+            // Compter les bases
+            orders.forEach(order => {
+                const baseName = 'Base ' + getBaseName(order.base);
+                summary[baseName] = (summary[baseName] || 0) + 1;
+            });
+            
+            // Compter tous les autres ingrédients
+            const categories = ['vegetables', 'cheese', 'meat', 'extras'];
+            categories.forEach(cat => {
+                orders.forEach(order => {
+                    if (order[cat]) {
+                        order[cat].forEach(ing => {
+                            summary[ing] = (summary[ing] || 0) + 1;
+                        });
+                    }
                 });
             });
             
-            prepContent.innerHTML = `
-                <div class="prep-instruction">
-                    <h3>📊 Résumé de préparation pour ${orders.length} pizza(s)</h3>
-                </div>
-                
-                <div class="prep-instruction">
-                    <h4>🍕 Bases</h4>
-                    ${Object.entries(ingredients.bases).map(([base, count]) => 
-                        `<div>${base}: ${count} pizza(s)</div>`
-                    ).join('')}
-                </div>
-                
-                <div class="prep-instruction">
-                    <h4>🥬 Légumes nécessaires</h4>
-                    ${Object.entries(ingredients.vegetables).map(([veg, count]) => 
-                        `<div>${veg}: sur ${count} pizza(s)</div>`
-                    ).join('') || '<div>Aucun</div>'}
-                </div>
-                
-                <div class="prep-instruction">
-                    <h4>🧀 Fromages nécessaires</h4>
-                    ${Object.entries(ingredients.cheese).map(([ch, count]) => 
-                        `<div>${ch}: sur ${count} pizza(s)</div>`
-                    ).join('') || '<div>Aucun</div>'}
-                </div>
-                
-                <div class="prep-instruction">
-                    <h4>🍖 Viandes nécessaires</h4>
-                    ${Object.entries(ingredients.meat).map(([m, count]) => 
-                        `<div>${m}: sur ${count} pizza(s)</div>`
-                    ).join('') || '<div>Aucune</div>'}
-                </div>
-                
-                <div class="prep-instruction">
-                    <h4>✨ Extras nécessaires</h4>
-                    ${Object.entries(ingredients.extras).map(([e, count]) => 
-                        `<div>${e}: sur ${count} pizza(s)</div>`
-                    ).join('') || '<div>Aucun</div>'}
-                </div>
-                
-                <div class="prep-pizza-grid">
-                    ${orders.map((order, index) => `
-                        <div class="prep-pizza-item">
-                            <div class="prep-pizza-visual">🍕</div>
-                            <strong>#${index + 1} - ${order.name}</strong>
-                            <div style="font-size: 12px; margin-top: 5px;">${order.pizzaType}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+            // Trier par quantité décroissante
+            const sorted = Object.entries(summary).sort((a, b) => b[1] - a[1]);
+            
+            return sorted.map(([ing, count]) => 
+                `<div style="margin: 5px 0;"><strong>${ing}:</strong> ${count}x</div>`
+            ).join('');
+        }
+
+        function startPrepSteps() {
+            db.collection("orders")
+                .orderBy("timestamp", "asc")
+                .get()
+                .then(snapshot => {
+                    const orders = [];
+                    snapshot.forEach(doc => {
+                        orders.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    // Trier les commandes
+                    orders.sort((a, b) => {
+                        if (a.dough === 'sans-gluten' && b.dough !== 'sans-gluten') return -1;
+                        if (a.dough !== 'sans-gluten' && b.dough === 'sans-gluten') return 1;
+                        return 0;
+                    });
+                    
+                    const prepSteps = generatePrepSteps(orders);
+                    let currentStepIndex = 0;
+
+                    function showPrepStep() {
+                        if (currentStepIndex >= prepSteps.length) {
+                            document.getElementById('prepContent').innerHTML = `
+                                <div class="prep-instruction">
+                                    <h2>🎉 Toutes les pizzas sont prêtes !</h2>
+                                    <button class="btn-primary" onclick="showAdminView()">Retour au tableau de bord</button>
+                                </div>
+                            `;
+                            return;
+                        }
+
+                        const step = prepSteps[currentStepIndex];
+                        const pizzasHtml = step.pizzas.map(p => {
+                            const orderIndex = orders.indexOf(p) + 1;
+                            return `
+                                <div class="prep-pizza-item">
+                                    <div class="prep-pizza-visual">
+                                        <div class="pizza-layer show" style="font-size: 60px;">🍕</div>
+                                    </div>
+                                    <strong>${p.name} (#${orderIndex})</strong>
+                                    ${p.dough === 'sans-gluten' ? '<div style="color: #e74c3c; font-size: 12px;">⚠️ Sans gluten</div>' : ''}
+                                </div>
+                            `;
+                        }).join('');
+
+                        document.getElementById('prepContent').innerHTML = `
+                            <div class="prep-instruction">
+                                <h3>Étape ${currentStepIndex + 1} sur ${prepSteps.length}</h3>
+                                <h2>${step.instruction}</h2>
+                                <div class="prep-pizza-grid">${pizzasHtml}</div>
+                                <button class="btn-primary" onclick="nextPrepStep()">Suivant →</button>
+                            </div>
+                        `;
+                    }
+
+                    window.nextPrepStep = function() {
+                        currentStepIndex++;
+                        showPrepStep();
+                    };
+
+                    showPrepStep();
+                });
+        }
+
+        function generatePrepSteps(orders) {
+            const steps = [];
+            
+            // Étape 1: Pâtes
+            const doughTypes = {};
+            orders.forEach(order => {
+                if (!doughTypes[order.dough]) doughTypes[order.dough] = [];
+                doughTypes[order.dough].push(order);
+            });
+            
+            // Toujours faire les sans gluten en premier
+            if (doughTypes['sans-gluten']) {
+                steps.push({
+                    instruction: `⚠️ ATTENTION: Préparer ${doughTypes['sans-gluten'].length} pâte(s) SANS GLUTEN (nettoyer le plan de travail)`,
+                    pizzas: doughTypes['sans-gluten']
+                });
+            }
+            
+            if (doughTypes['napolitaine']) {
+                steps.push({
+                    instruction: `Préparer ${doughTypes['napolitaine'].length} pâte(s) Napolitaine`,
+                    pizzas: doughTypes['napolitaine']
+                });
+            }
+
+            // Étape 2: Bases
+            const bases = {};
+            orders.forEach(order => {
+                if (!bases[order.base]) bases[order.base] = [];
+                bases[order.base].push(order);
+            });
+            
+            Object.entries(bases).forEach(([base, pizzas]) => {
+                steps.push({
+                    instruction: `Étaler la base ${getBaseName(base)} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 3: Légumes (du plus au moins utilisé)
+            const vegetables = countIngredients(orders, 'vegetables');
+            vegetables.forEach(([veg, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${veg} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 4: Fromages
+            const cheeses = countIngredients(orders, 'cheese');
+            cheeses.forEach(([cheese, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${cheese} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 5: Viandes
+            const meats = countIngredients(orders, 'meat');
+            meats.forEach(([meat, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${meat} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 6: Cuisson
+            steps.push({
+                instruction: `Enfourner toutes les pizzas (250°C, 8-10 minutes)`,
+                pizzas: orders
+            });
+
+            // Étape 7: Extras
+            const extras = countIngredients(orders, 'extras');
+            extras.forEach(([extra, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${extra} sur ${pizzas.length} pizza(s) après cuisson`,
+                    pizzas: pizzas
+                });
+            });
+
+            return steps;
+        }
+
+        function countIngredients(orders, category) {
+            const counts = {};
+            
+            orders.forEach(order => {
+                if (order[category]) {
+                    order[category].forEach(ingredient => {
+                        if (!counts[ingredient]) counts[ingredient] = [];
+                        counts[ingredient].push(order);
+                    });
+                }
+            });
+            
+            return Object.entries(counts).sort((a, b) => b[1].length - a[1].length);
+        }
+
+        // Fonctions utilitaires
+        function getPizzaName(type) {
+            const names = {
+                'personnalisee': 'Personnalisée',
+                'margherita': 'Margherita',
+                'regina': 'Regina',
+                '4fromages': '4 Fromages',
+                'calzone': 'Calzone',
+                'diavola': 'Diavola'
+            };
+            return names[type] || type;
+        }
+
+        function getBaseName(base) {
+            const names = {
+                'tomate': 'Tomate',
+                'creme': 'Crème',
+                'pesto': 'Pesto'
+            };
+            return names[base] || base;
         }
 
         // Initialisation
