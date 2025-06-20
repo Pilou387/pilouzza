@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -447,6 +448,23 @@
             }
         }
     </style>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBkpyaebYWwxhLdVGAx8HO2A8_pzHyOk54",
+    authDomain: "la-pilouzza.firebaseapp.com",
+    projectId: "la-pilouzza",
+    storageBucket: "la-pilouzza.firebasestorage.app",
+    messagingSenderId: "612459079025",
+    appId: "1:612459079025:web:d9c1b059eae189bce142d0"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
 </head>
 <body>
     <div class="container">
@@ -454,7 +472,7 @@
         <div id="orderView" class="order-view">
             <div class="header">
                 <div class="pizza-icon">🍕</div>
-                <h1>La Pilouzza 🇮🇹</h1>
+                <h1>Pizza Maison</h1>
                 <p>Composez votre pizza idéale !</p>
             </div>
 
@@ -1458,5 +1476,59 @@
         // Initialisation
         updateOrderCount();
     </script>
+<script>
+document.getElementById('pizzaForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const currentOrder = {
+    name: form.name.value,
+    dough: form.dough.value,
+    pizzaType: form.pizzaType.value,
+    base: form.base.value,
+    vegetables: Array.from(form.querySelectorAll('input[name="vegetables"]:checked')).map(cb => cb.value),
+    cheese: Array.from(form.querySelectorAll('input[name="cheese"]:checked')).map(cb => cb.value),
+    meat: Array.from(form.querySelectorAll('input[name="meat"]:checked')).map(cb => cb.value),
+    extras: Array.from(form.querySelectorAll('input[name="extras"]:checked')).map(cb => cb.value),
+    notes: form.notes.value,
+    time: new Date().toLocaleTimeString('fr-FR')
+  };
+
+  db.collection("orders").add(currentOrder).then(docRef => {
+    document.getElementById('successMessage').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('successMessage').style.display = 'none';
+      form.reset();
+      displayOrders();
+    }, 3000);
+  }).catch(error => {
+    alert("Erreur Firebase : " + error.message);
+  });
+});
+
+function displayOrders() {
+  db.collection("orders").orderBy("time", "asc").get().then(snapshot => {
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const ordersList = document.getElementById('ordersList');
+    if (!orders.length) {
+      ordersList.innerHTML = '<p style="text-align:center; color:#999;">Aucune commande pour le moment</p>';
+    } else {
+      ordersList.innerHTML = orders.map((order, index) => `
+        <div class="order-item">
+          <h3>${order.name} - ${order.time} - Pizza #${index + 1}</h3>
+          <div><strong>Pâte:</strong> ${order.dough}</div>
+          <div><strong>Type:</strong> ${order.pizzaType}</div>
+          <div><strong>Base:</strong> ${order.base}</div>
+          <div><strong>Légumes:</strong> ${order.vegetables.join(', ')}</div>
+          <div><strong>Fromages:</strong> ${order.cheese.join(', ')}</div>
+          <div><strong>Viandes:</strong> ${order.meat.join(', ')}</div>
+          <div><strong>Extras:</strong> ${order.extras.join(', ')}</div>
+          ${order.notes ? `<div><strong>Notes:</strong> ${order.notes}</div>` : ''}
+        </div>`).join('');
+    }
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => displayOrders());
+</script>
 </body>
 </html>
