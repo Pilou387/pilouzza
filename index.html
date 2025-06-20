@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Maison - Commande</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .pizza-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2a5298;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #2a5298;
+            transform: scale(1.02);
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .choice-option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            position: relative;
+        }
+
+        .choice-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .choice-option.selected {
+            background: #2a5298;
+            color: white;
+            border-color: #2a5298;
+            transform: scale(1.05);
+        }
+
+        .ingredient-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .ingredient-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .ingredient-item:hover {
+            background: #e8e8e8;
+        }
+
+        .ingredient-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .ingredient-item label {
+            cursor: pointer;
+            margin-bottom: 0;
+            font-weight: normal;
+            flex: 1;
+        }
+
+        .info-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2a5298;
+            color: white;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 5px;
+        }
+
+        .info-btn:hover {
+            background: #1e3c72;
+            transform: scale(1.1);
+        }
+
+        .info-tooltip {
+            display: none;
+            position: fixed;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 250px;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .info-tooltip.show {
+            display: block;
+        }
+
+        .info-tooltip img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .btn-submit, .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-submit:hover, .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #27ae60;
+            color: white;
+            border-radius: 10px;
+            margin-top: 20px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .admin-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            color: #2a5298;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+
+        .admin-toggle:hover {
+            transform: scale(1.1);
+            background: white;
+        }
+
+        .admin-view, .prep-view {
+            display: none;
+        }
+
+        .order-list {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .order-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #2a5298;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .order-item h3 {
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+
+        .order-detail {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-secondary {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #1e3c72;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .order-counter {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .step {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .step.active {
+            background: #2a5298;
+            transform: scale(1.3);
+        }
+
+        .step.completed {
+            background: #27ae60;
+        }
+
+        .pizza-preview {
+            width: 150px;
+            height: 150px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .pizza-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .pizza-layer.show {
+            opacity: 1;
+        }
+
+        .prep-instruction {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            border: 2px solid #2a5298;
+        }
+
+        .prep-pizza-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .prep-pizza-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .prep-pizza-visual {
+            width: 80px;
+            height: 80px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .choice-grid, .ingredient-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Vue Commande Client -->
+        <div id="orderView" class="order-view">
+            <div class="header">
+                <div class="pizza-icon">🍕</div>
+                <h1>Pizza Maison</h1>
+                <p>Composez votre pizza idéale !</p>
+            </div>
+
+            <div class="step-indicator">
+                <div class="step active" data-step="1"></div>
+                <div class="step" data-step="2"></div>
+                <div class="step" data-step="3"></div>
+                <div class="step" data-step="4"></div>
+                <div class="step" data-step="5"></div>
+                <div class="step" data-step="6"></div>
+                <div class="step" data-step="7"></div>
+            </div>
+
+            <form id="pizzaForm" class="card">
+                <!-- Étape 1: Nom -->
+                <div class="form-step" data-step="1">
+                    <div class="form-group">
+                        <label for="name">Votre nom</label>
+                        <input type="text" id="name" required placeholder="Jean Dupont">
+                    </div>
+                    <button type="button" class="btn-primary" onclick="nextStep()">Suivant</button>
+                </div>
+
+                <!-- Étape 2: Type de pâte -->
+                <div class="form-step hidden" data-step="2">
+                    <div class="form-group">
+                        <label>Type de pâte</label>
+                        <div class="choice-grid">
+                            <div class="choice-option" data-dough="napolitaine">
+                                <div>🍕</div>
+                                <div>Napolitaine</div>
+                            </div>
+                            <div class="choice-option" data-dough="sans-gluten">
+                                <div>🌾</div>
+                                <div>Sans gluten</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="previousStep()">← Retour</button>
+                        <button type="button" class="btn-primary" onclick="nextStep()">Suivant</button>
+                    </div>
+                </div>
+
+                <!-- Étape 3: Type de pizza -->
+                <div class="form-step hidden" data-step="3">
+                    <div class="form-group">
+                        <label>Choisissez votre pizza</label>
+                        <div class="choice-grid">
+                            <div class="choice-option" data-pizza="personnalisee">
+                                <div>✨</div>
+                                <div>Personnalisée</div>
+                            </div>
+                            <div class="choice-option" data-pizza="margherita">
+                                <div>🍅</div>
+                                <div>Margherita</div>
+                            </div>
+                            <div class="choice-option" data-pizza="regina">
+                                <div>🍖</div>
+                                <div>Regina</div>
+                            </div>
+                            <div class="choice-option" data-pizza="4fromages">
+                                <div>🧀</div>
+                                <div>4 Fromages</div>
+                            </div>
+                            <div class="choice-option" data-pizza="calzone">
+                                <div>🥟</div>
+                                <div>Calzone</div>
+                            </div>
+                            <div class="choice-option" data-pizza="diavola">
+                                <div>🌶️</div>
+                                <div>Diavola</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="previousStep()">← Retour</button>
+                        <button type="button" class="btn-primary" onclick="nextStep()">Suivant</button>
+                    </div>
+                </div>
+
+                <!-- Étape 4: Base -->
+                <div class="form-step hidden" data-step="4">
+                    <div class="form-group">
+                        <label>Base de la pizza</label>
+                        <div class="choice-grid">
+                            <div class="choice-option" data-base="tomate">
+                                <div>🍅</div>
+                                <div>Tomate</div>
+                            </div>
+                            <div class="choice-option" data-base="creme">
+                                <div>🥛</div>
+                                <div>Crème</div>
+                            </div>
+                            <div class="choice-option" data-base="pesto">
+                                <div>🌿</div>
+                                <div>Pesto</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="previousStep()">← Retour</button>
+                        <button type="button" class="btn-primary" onclick="nextStep()">Suivant</button>
+                    </div>
+                </div>
+
+                <!-- Étape 5: Légumes -->
+                <div class="form-step hidden" data-step="5">
+                    <div class="form-group">
+                        <label>Légumes</label>
+                        <div class="ingredient-grid">
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="oignons" name="vegetables" value="Oignons">
+                                <label for="oignons">🧅 Oignons</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Oignons', 'Bulbe aromatique au goût doux ou piquant', 'oignons rouges')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="poivrons" name="vegetables" value="Poivrons">
+                                <label for="poivrons">🫑 Poivrons</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Poivrons', 'Légume coloré, croquant et légèrement sucré', 'poivrons grillés pizza')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="champignons" name="vegetables" value="Champignons">
+                                <label for="champignons">🍄 Champignons</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Champignons', 'Champignons de Paris, saveur douce et terreuse', 'champignons de paris')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="courgettes" name="vegetables" value="Courgettes">
+                                <label for="courgettes">🥒 Courgettes</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Courgettes', 'Légume vert tendre au goût délicat', 'courgettes grillées')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="aubergines" name="vegetables" value="Aubergines">
+                                <label for="aubergines">🍆 Aubergines</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Aubergines', 'Légume violet à la texture fondante', 'aubergines grillées')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="artichauts" name="vegetables" value="Artichauts">
+                                <label for="artichauts">🥬 Artichauts</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Artichauts', 'Cœurs d\'artichauts marinés, goût délicat', 'coeurs artichauts marinés')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="olives" name="vegetables" value="Olives">
+                                <label for="olives">🫒 Olives</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Olives', 'Olives noires ou vertes, saveur salée', 'olives noires vertes')">i</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="previousStep()">← Retour</button>
+                        <button type="button" class="btn-primary" onclick="nextStep()">Suivant</button>
+                    </div>
+                </div>
+
+                <!-- Étape 6: Fromages -->
+                <div class="form-step hidden" data-step="6">
+                    <div class="form-group">
+                        <label>Fromages</label>
+                        <div class="ingredient-grid">
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="mozzarella" name="cheese" value="Mozzarella">
+                                <label for="mozzarella">🧀 Mozzarella</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Mozzarella', 'Fromage italien doux et filant', 'mozzarella di bufala')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="scamorza" name="cheese" value="Scamorza">
+                                <label for="scamorza">🧈 Scamorza</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Scamorza', 'Fromage italien fumé au goût prononcé', 'scamorza affumicata')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="provolone" name="cheese" value="Provolone">
+                                <label for="provolone">🧀 Provolone</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Provolone', 'Fromage italien semi-dur au goût piquant', 'provolone cheese')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="taleggio" name="cheese" value="Taleggio">
+                                <label for="taleggio">🧈 Taleggio</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Taleggio', 'Fromage crémeux italien au goût fruité', 'taleggio cheese')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="parmesan" name="cheese" value="Parmesan">
+                                <label for="parmesan">🧀 Parmesan</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Parmesan', 'Fromage italien dur au goût intense', 'parmigiano reggiano')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="gruyere" name="cheese" value="Gruyère">
+                                <label for="gruyere">🧀 Gruyère</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Gruyère', 'Fromage suisse au goût fruité et noisette', 'gruyère cheese')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="chevre" name="cheese" value="Chèvre">
+                                <label for="chevre">🐐 Chèvre</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Chèvre', 'Fromage de chèvre crémeux et acidulé', 'fromage de chèvre')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="fourme" name="cheese" value="Fourme d'Ambert">
+                                <label for="fourme">🧀 Fourme</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Fourme d\'Ambert', 'Fromage bleu doux et crémeux', 'fourme ambert')">i</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="previousStep()">← Retour</button>
+                        <button type="button" class="btn-primary" onclick="nextStep()">Suivant</button>
+                    </div>
+                </div>
+
+                <!-- Étape 7: Viandes et Extras -->
+                <div class="form-step hidden" data-step="7">
+                    <div class="form-group">
+                        <label>Viandes</label>
+                        <div class="ingredient-grid">
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="lardons" name="meat" value="Lardons">
+                                <label for="lardons">🥓 Lardons</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Lardons', 'Petits morceaux de poitrine fumée', 'lardons fumés')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="nduja" name="meat" value="Nduja">
+                                <label for="nduja">🌶️ Nduja</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Nduja', 'Charcuterie calabraise épicée à tartiner', 'nduja calabrese')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="jambonblanc" name="meat" value="Jambon blanc">
+                                <label for="jambonblanc">🍖 Jambon blanc</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Jambon blanc', 'Jambon cuit classique', 'jambon blanc')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="jamboncru" name="meat" value="Jambon cru">
+                                <label for="jamboncru">🥩 Jambon cru</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Jambon cru', 'Jambon sec italien (prosciutto)', 'prosciutto di parma')">i</button>
+                            </div>
+                        </div>
+
+                        <label style="margin-top: 20px;">Extras</label>
+                        <div class="ingredient-grid">
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="miel" name="extras" value="Miel">
+                                <label for="miel">🍯 Miel</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Miel', 'Miel liquide pour sucrer légèrement', 'miel liquide')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="huilepiquante" name="extras" value="Huile piquante">
+                                <label for="huilepiquante">🌶️ Huile piquante</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Huile piquante', 'Huile d\'olive infusée au piment', 'olio piccante')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="huileolive" name="extras" value="Huile d'olive">
+                                <label for="huileolive">🫒 Huile d'olive</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Huile d\'olive', 'Huile d\'olive extra vierge', 'huile olive extra vierge')">i</button>
+                            </div>
+                            <div class="ingredient-item">
+                                <input type="checkbox" id="huiletruffe" name="extras" value="Huile de truffe">
+                                <label for="huiletruffe">🍄 Huile de truffe</label>
+                                <button type="button" class="info-btn" onclick="showInfo('Huile de truffe', 'Huile parfumée à la truffe noire', 'huile truffe noire')">i</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="notes">Instructions spéciales</label>
+                        <input type="text" id="notes" placeholder="Sans oignons, bien cuite...">
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="previousStep()">← Retour</button>
+                        <button type="submit" class="btn-submit">Commander ma pizza 🍕</button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="successMessage" class="success-message">
+                <h2>✅ Commande confirmée !</h2>
+                <p>Votre pizza sera prête bientôt !</p>
+            </div>
+        </div>
+
+        <!-- Vue Admin -->
+        <div id="adminView" class="admin-view">
+            <div class="header">
+                <h1>Tableau de bord Pizzaiolo</h1>
+                <p>Commandes en attente <span id="orderCount" class="order-counter">0</span></p>
+            </div>
+
+            <div class="order-list">
+                <div class="btn-group">
+                    <button class="btn-secondary" onclick="showOrderView()">← Retour</button>
+                    <button class="btn-secondary" onclick="showPrepView()">Mode Préparation 👨‍🍳</button>
+                    <button class="btn-danger" onclick="clearOrders()">Effacer tout</button>
+                </div>
+                <div id="ordersList"></div>
+            </div>
+        </div>
+
+        <!-- Vue Préparation -->
+        <div id="prepView" class="prep-view">
+            <div class="header">
+                <h1>Mode Préparation</h1>
+                <p>Suivez les étapes pour préparer les pizzas</p>
+            </div>
+
+            <div class="order-list">
+                <div class="btn-group">
+                    <button class="btn-secondary" onclick="showAdminView()">← Retour</button>
+                </div>
+                <div id="prepContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de connexion admin -->
+    <div id="adminLogin" class="info-tooltip" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 350px;">
+        <h3 style="margin-bottom: 15px;">Accès Admin</h3>
+        <input type="password" id="adminPassword" placeholder="Mot de passe" style="margin-bottom: 15px;">
+        <button class="btn-primary" onclick="checkPassword()">Connexion</button>
+        <button class="btn-secondary" onclick="cancelLogin()" style="margin-top: 10px;">Annuler</button>
+    </div>
+
+    <!-- Tooltip d'information -->
+    <div id="infoTooltip" class="info-tooltip"></div>
+
+    <button class="admin-toggle" onclick="requestAdminAccess()">👨‍🍳</button>
+
+    <script>
+        // Configuration
+        const ADMIN_PASSWORD = "pizza123"; // Changez ce mot de passe !
+        
+        // État de l'application
+        let orders = [];
+        let currentStep = 1;
+        let currentOrder = {};
+        let isAdminAuthenticated = false;
+
+        // Définition des pizzas prédéfinies
+        const predefinedPizzas = {
+            margherita: {
+                base: 'tomate',
+                vegetables: ['Olives'],
+                cheese: ['Mozzarella'],
+                meat: [],
+                extras: ['Huile d\'olive']
+            },
+            regina: {
+                base: 'tomate',
+                vegetables: ['Champignons'],
+                cheese: ['Mozzarella'],
+                meat: ['Jambon blanc'],
+                extras: []
+            },
+            '4fromages': {
+                base: 'creme',
+                vegetables: [],
+                cheese: ['Mozzarella', 'Chèvre', 'Fourme d\'Ambert', 'Parmesan'],
+                meat: [],
+                extras: []
+            },
+            calzone: {
+                base: 'tomate',
+                vegetables: ['Champignons'],
+                cheese: ['Mozzarella'],
+                meat: ['Jambon blanc'],
+                extras: []
+            },
+            diavola: {
+                base: 'tomate',
+                vegetables: ['Oignons'],
+                cheese: ['Mozzarella'],
+                meat: ['Nduja'],
+                extras: ['Huile piquante']
+            }
+        };
+
+        // Navigation entre les étapes
+        function nextStep() {
+            if (validateCurrentStep()) {
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('hidden');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('completed');
+                
+                currentStep++;
+                
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('hidden');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+
+                // Si pizza prédéfinie, pré-remplir les ingrédients mais permettre la modification
+                if (currentStep === 4 && currentOrder.pizzaType !== 'personnalisee') {
+                    applyPredefinedPizza();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('hidden');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active', 'completed');
+                
+                currentStep--;
+                
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('hidden');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+            }
+        }
+
+        function validateCurrentStep() {
+            switch(currentStep) {
+                case 1:
+                    const name = document.getElementById('name').value;
+                    if (!name) {
+                        alert('Veuillez entrer votre nom');
+                        return false;
+                    }
+                    currentOrder.name = name;
+                    return true;
+                case 2:
+                    const dough = document.querySelector('[data-dough].selected');
+                    if (!dough) {
+                        alert('Veuillez choisir un type de pâte');
+                        return false;
+                    }
+                    currentOrder.dough = dough.dataset.dough;
+                    return true;
+                case 3:
+                    const pizza = document.querySelector('[data-pizza].selected');
+                    if (!pizza) {
+                        alert('Veuillez choisir un type de pizza');
+                        return false;
+                    }
+                    currentOrder.pizzaType = pizza.dataset.pizza;
+                    return true;
+                case 4:
+                    const base = document.querySelector('[data-base].selected');
+                    if (!base) {
+                        alert('Veuillez choisir une base');
+                        return false;
+                    }
+                    currentOrder.base = base.dataset.base;
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        function applyPredefinedPizza() {
+            const pizza = predefinedPizzas[currentOrder.pizzaType];
+            if (pizza) {
+                // Pré-sélectionner la base
+                document.querySelectorAll('[data-base]').forEach(opt => opt.classList.remove('selected'));
+                document.querySelector(`[data-base="${pizza.base}"]`)?.classList.add('selected');
+                
+                // Pré-cocher les ingrédients
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                
+                pizza.vegetables.forEach(veg => {
+                    const checkbox = Array.from(document.querySelectorAll('input[name="vegetables"]'))
+                        .find(cb => cb.value === veg);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                pizza.cheese.forEach(cheese => {
+                    const checkbox = Array.from(document.querySelectorAll('input[name="cheese"]'))
+                        .find(cb => cb.value === cheese);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                pizza.meat.forEach(meat => {
+                    const checkbox = Array.from(document.querySelectorAll('input[name="meat"]'))
+                        .find(cb => cb.value === meat);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                pizza.extras.forEach(extra => {
+                    const checkbox = Array.from(document.querySelectorAll('input[name="extras"]'))
+                        .find(cb => cb.value === extra);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+        }
+
+        // Gestion des sélections
+        document.querySelectorAll('.choice-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const siblings = this.parentElement.querySelectorAll('.choice-option');
+                siblings.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Afficher les informations sur les ingrédients
+        function showInfo(name, description, searchTerm) {
+            const tooltip = document.getElementById('infoTooltip');
+            const imageUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}&tbm=isch`;
+            
+            tooltip.innerHTML = `
+                <img src="https://via.placeholder.com/250x150?text=${encodeURIComponent(name)}" alt="${name}">
+                <h4>${name}</h4>
+                <p>${description}</p>
+                <a href="${imageUrl}" target="_blank" style="color: #4CAF50; text-decoration: none;">Voir des images →</a>
+            `;
+            
+            tooltip.classList.add('show');
+            
+            // Positionner le tooltip
+            const rect = event.target.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 10) + 'px';
+            
+            // Cacher après 5 secondes
+            setTimeout(() => {
+                tooltip.classList.remove('show');
+            }, 5000);
+        }
+
+        // Cacher le tooltip en cliquant ailleurs
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('info-btn')) {
+                document.getElementById('infoTooltip').classList.remove('show');
+            }
+        });
+
+        // Soumission du formulaire
+        document.getElementById('pizzaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collecter les dernières données
+            currentOrder.vegetables = Array.from(document.querySelectorAll('input[name="vegetables"]:checked')).map(cb => cb.value);
+            currentOrder.cheese = Array.from(document.querySelectorAll('input[name="cheese"]:checked')).map(cb => cb.value);
+            currentOrder.meat = Array.from(document.querySelectorAll('input[name="meat"]:checked')).map(cb => cb.value);
+            currentOrder.extras = Array.from(document.querySelectorAll('input[name="extras"]:checked')).map(cb => cb.value);
+            currentOrder.notes = document.getElementById('notes').value;
+            currentOrder.time = new Date().toLocaleTimeString('fr-FR');
+            currentOrder.id = Date.now();
+
+            // Ajouter la commande
+            orders.push(currentOrder);
+            
+            // Trier les commandes : sans gluten en premier
+            orders.sort((a, b) => {
+                if (a.dough === 'sans-gluten' && b.dough !== 'sans-gluten') return -1;
+                if (a.dough !== 'sans-gluten' && b.dough === 'sans-gluten') return 1;
+                return 0;
+            });
+            
+            updateOrderCount();
+
+            // Afficher le message de succès
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Réinitialiser
+            setTimeout(() => {
+                resetForm();
+            }, 3000);
+        });
+
+        // Empêcher la soumission par Enter dans les champs texte
+        document.getElementById('name').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextStep();
+            }
+        });
+
+        document.getElementById('notes').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('pizzaForm').reset();
+            document.querySelectorAll('.choice-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelectorAll('.form-step').forEach(step => step.classList.add('hidden'));
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            currentStep = 1;
+            currentOrder = {};
+            
+            document.querySelector('.form-step[data-step="1"]').classList.remove('hidden');
+            document.querySelector('.step[data-step="1"]').classList.add('active');
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Gestion de l'accès admin
+        function requestAdminAccess() {
+            if (isAdminAuthenticated) {
+                showAdminView();
+            } else {
+                document.getElementById('adminLogin').style.display = 'block';
+                document.getElementById('adminPassword').focus();
+            }
+        }
+
+        function checkPassword() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD) {
+                isAdminAuthenticated = true;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminPassword').value = '';
+                showAdminView();
+            } else {
+                alert('Mot de passe incorrect');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        function cancelLogin() {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // Gestion de l'appui sur Entrée pour le mot de passe
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        // Navigation entre les vues
+        function showOrderView() {
+            document.getElementById('orderView').style.display = 'block';
+            document.getElementById('adminView').style.display = 'none';
+            document.getElementById('prepView').style.display = 'none';
+        }
+
+        function showAdminView() {
+            if (!isAdminAuthenticated) {
+                requestAdminAccess();
+                return;
+            }
+            document.getElementById('orderView').style.display = 'none';
+            document.getElementById('adminView').style.display = 'block';
+            document.getElementById('prepView').style.display = 'none';
+            displayOrders();
+        }
+
+        function showPrepView() {
+            document.getElementById('orderView').style.display = 'none';
+            document.getElementById('adminView').style.display = 'none';
+            document.getElementById('prepView').style.display = 'block';
+            displayPrepMode();
+        }
+
+        // Afficher les commandes
+        function displayOrders() {
+            const ordersList = document.getElementById('ordersList');
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p style="text-align: center; color: #999;">Aucune commande pour le moment</p>';
+                return;
+            }
+
+            // S'assurer que les pizzas sans gluten sont en premier
+            orders.sort((a, b) => {
+                if (a.dough === 'sans-gluten' && b.dough !== 'sans-gluten') return -1;
+                if (a.dough !== 'sans-gluten' && b.dough === 'sans-gluten') return 1;
+                return 0;
+            });
+
+            ordersList.innerHTML = orders.map((order, index) => `
+                <div class="order-item">
+                    <h3>${order.name} - ${order.time} - Pizza #${index + 1}</h3>
+                    <div class="order-detail"><strong>Pâte:</strong> ${order.dough === 'napolitaine' ? 'Napolitaine' : 'Sans gluten'}</div>
+                    <div class="order-detail"><strong>Type:</strong> ${getPizzaName(order.pizzaType)}</div>
+                    <div class="order-detail"><strong>Base:</strong> ${getBaseName(order.base)}</div>
+                    <div class="order-detail"><strong>Légumes:</strong> ${order.vegetables.length > 0 ? order.vegetables.join(', ') : 'Aucun'}</div>
+                    <div class="order-detail"><strong>Fromages:</strong> ${order.cheese.length > 0 ? order.cheese.join(', ') : 'Aucun'}</div>
+                    <div class="order-detail"><strong>Viandes:</strong> ${order.meat.length > 0 ? order.meat.join(', ') : 'Aucune'}</div>
+                    <div class="order-detail"><strong>Extras:</strong> ${order.extras.length > 0 ? order.extras.join(', ') : 'Aucun'}</div>
+                    ${order.notes ? `<div class="order-detail"><strong>Notes:</strong> ${order.notes}</div>` : ''}
+                    <button class="btn-secondary" style="margin-top: 10px;" onclick="editOrder(${index})">Modifier complètement</button>
+                </div>
+            `).join('');
+        }
+
+        // Mode préparation
+        function displayPrepMode() {
+            if (orders.length === 0) {
+                document.getElementById('prepContent').innerHTML = '<p style="text-align: center; color: #999;">Aucune commande à préparer</p>';
+                return;
+            }
+
+            // Afficher d'abord le résumé des ingrédients
+            const ingredientSummary = generateIngredientSummary();
+            const specialNotes = orders.filter(o => o.notes).map((o, idx) => 
+                `<li><strong>${o.name} (Pizza #${orders.indexOf(o) + 1}):</strong> ${o.notes}</li>`
+            ).join('');
+
+            document.getElementById('prepContent').innerHTML = `
+                <div class="prep-instruction" style="margin-bottom: 20px;">
+                    <h2>📊 Résumé des ingrédients</h2>
+                    <div style="text-align: left; margin: 15px 0;">
+                        ${ingredientSummary}
+                    </div>
+                </div>
+                ${specialNotes ? `
+                <div class="prep-instruction" style="margin-bottom: 20px;">
+                    <h2>📝 Instructions spéciales</h2>
+                    <ul style="text-align: left; margin: 15px 0;">
+                        ${specialNotes}
+                    </ul>
+                </div>
+                ` : ''}
+                <button class="btn-primary" onclick="startPrepSteps()">Commencer la préparation →</button>
+            `;
+        }
+
+        function generateIngredientSummary() {
+            const summary = {};
+            
+            // Compter les pâtes
+            orders.forEach(order => {
+                const doughName = order.dough === 'napolitaine' ? 'Pâte Napolitaine' : 'Pâte Sans gluten';
+                summary[doughName] = (summary[doughName] || 0) + 1;
+            });
+            
+            // Compter les bases
+            orders.forEach(order => {
+                const baseName = 'Base ' + getBaseName(order.base);
+                summary[baseName] = (summary[baseName] || 0) + 1;
+            });
+            
+            // Compter tous les autres ingrédients
+            const categories = ['vegetables', 'cheese', 'meat', 'extras'];
+            categories.forEach(cat => {
+                orders.forEach(order => {
+                    order[cat].forEach(ing => {
+                        summary[ing] = (summary[ing] || 0) + 1;
+                    });
+                });
+            });
+            
+            // Trier par quantité décroissante
+            const sorted = Object.entries(summary).sort((a, b) => b[1] - a[1]);
+            
+            return sorted.map(([ing, count]) => 
+                `<div style="margin: 5px 0;"><strong>${ing}:</strong> ${count}x</div>`
+            ).join('');
+        }
+
+        function startPrepSteps() {
+            const prepSteps = generatePrepSteps();
+            let currentStepIndex = 0;
+
+            function showPrepStep() {
+                if (currentStepIndex >= prepSteps.length) {
+                    document.getElementById('prepContent').innerHTML = `
+                        <div class="prep-instruction">
+                            <h2>🎉 Toutes les pizzas sont prêtes !</h2>
+                            <button class="btn-primary" onclick="showAdminView()">Retour au tableau de bord</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const step = prepSteps[currentStepIndex];
+                const pizzasHtml = step.pizzas.map(p => {
+                    const orderIndex = orders.indexOf(p) + 1;
+                    return `
+                        <div class="prep-pizza-item">
+                            <div class="prep-pizza-visual">
+                                <div class="pizza-layer show" style="font-size: 60px;">🍕</div>
+                            </div>
+                            <strong>${p.name} (#${orderIndex})</strong>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('prepContent').innerHTML = `
+                    <div class="prep-instruction">
+                        <h3>Étape ${currentStepIndex + 1} sur ${prepSteps.length}</h3>
+                        <h2>${step.instruction}</h2>
+                        <div class="prep-pizza-grid">${pizzasHtml}</div>
+                        <button class="btn-primary" onclick="nextPrepStep()">Suivant →</button>
+                    </div>
+                `;
+            }
+
+            window.nextPrepStep = function() {
+                currentStepIndex++;
+                showPrepStep();
+            };
+
+            showPrepStep();
+        }
+
+        function generatePrepSteps() {
+            const steps = [];
+            
+            // Étape 1: Pâtes
+            const doughTypes = {};
+            orders.forEach(order => {
+                if (!doughTypes[order.dough]) doughTypes[order.dough] = [];
+                doughTypes[order.dough].push(order);
+            });
+            
+            Object.entries(doughTypes).forEach(([dough, pizzas]) => {
+                steps.push({
+                    instruction: `Préparer ${pizzas.length} pâte(s) ${dough === 'napolitaine' ? 'Napolitaine' : 'Sans gluten'}`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 2: Bases
+            const bases = {};
+            orders.forEach(order => {
+                if (!bases[order.base]) bases[order.base] = [];
+                bases[order.base].push(order);
+            });
+            
+            Object.entries(bases).forEach(([base, pizzas]) => {
+                steps.push({
+                    instruction: `Étaler la base ${getBaseName(base)} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 3: Légumes (du plus au moins utilisé)
+            const vegetables = countIngredients(orders, 'vegetables');
+            vegetables.forEach(([veg, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${veg} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 4: Fromages
+            const cheeses = countIngredients(orders, 'cheese');
+            cheeses.forEach(([cheese, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${cheese} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 5: Viandes
+            const meats = countIngredients(orders, 'meat');
+            meats.forEach(([meat, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${meat} sur ${pizzas.length} pizza(s)`,
+                    pizzas: pizzas
+                });
+            });
+
+            // Étape 6: Cuisson
+            steps.push({
+                instruction: `Enfourner toutes les pizzas (250°C, 8-10 minutes)`,
+                pizzas: orders
+            });
+
+            // Étape 7: Extras
+            const extras = countIngredients(orders, 'extras');
+            extras.forEach(([extra, pizzas]) => {
+                steps.push({
+                    instruction: `Ajouter ${extra} sur ${pizzas.length} pizza(s) après cuisson`,
+                    pizzas: pizzas
+                });
+            });
+
+            return steps;
+        }
+
+        function countIngredients(orders, category) {
+            const counts = {};
+            
+            orders.forEach(order => {
+                order[category].forEach(ingredient => {
+                    if (!counts[ingredient]) counts[ingredient] = [];
+                    counts[ingredient].push(order);
+                });
+            });
+            
+            return Object.entries(counts).sort((a, b) => b[1].length - a[1].length);
+        }
+
+        // Fonctions utilitaires
+        function getPizzaName(type) {
+            const names = {
+                'personnalisee': 'Personnalisée',
+                'margherita': 'Margherita',
+                'regina': 'Regina',
+                '4fromages': '4 Fromages',
+                'calzone': 'Calzone',
+                'diavola': 'Diavola'
+            };
+            return names[type] || type;
+        }
+
+        function getBaseName(base) {
+            const names = {
+                'tomate': 'Tomate',
+                'creme': 'Crème',
+                'pesto': 'Pesto'
+            };
+            return names[base] || base;
+        }
+
+        function updateOrderCount() {
+            document.getElementById('orderCount').textContent = orders.length;
+        }
+
+        function clearOrders() {
+            if (confirm('Êtes-vous sûr de vouloir effacer toutes les commandes ?')) {
+                orders = [];
+                updateOrderCount();
+                displayOrders();
+            }
+        }
+
+        function editOrder(index) {
+            const order = orders[index];
+            
+            // Créer un formulaire de modification
+            const editForm = `
+                <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h3>Modifier la commande de ${order.name}</h3>
+                    
+                    <label style="display: block; margin: 10px 0; font-weight: bold;">Pâte:</label>
+                    <select id="edit-dough" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                        <option value="napolitaine" ${order.dough === 'napolitaine' ? 'selected' : ''}>Napolitaine</option>
+                        <option value="sans-gluten" ${order.dough === 'sans-gluten' ? 'selected' : ''}>Sans gluten</option>
+                    </select>
+                    
+                    <label style="display: block; margin: 10px 0; font-weight: bold;">Base:</label>
+                    <select id="edit-base" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                        <option value="tomate" ${order.base === 'tomate' ? 'selected' : ''}>Tomate</option>
+                        <option value="creme" ${order.base === 'creme' ? 'selected' : ''}>Crème</option>
+                        <option value="pesto" ${order.base === 'pesto' ? 'selected' : ''}>Pesto</option>
+                    </select>
+                    
+                    <label style="display: block; margin: 10px 0; font-weight: bold;">Légumes:</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 10px;">
+                        ${['Oignons', 'Poivrons', 'Champignons', 'Courgettes', 'Aubergines', 'Artichauts', 'Olives'].map(veg => `
+                            <label><input type="checkbox" value="${veg}" ${order.vegetables.includes(veg) ? 'checked' : ''}> ${veg}</label>
+                        `).join('')}
+                    </div>
+                    
+                    <label style="display: block; margin: 10px 0; font-weight: bold;">Fromages:</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 10px;">
+                        ${['Mozzarella', 'Scamorza', 'Provolone', 'Taleggio', 'Parmesan', 'Gruyère', 'Chèvre', 'Fourme d\'Ambert'].map(cheese => `
+                            <label><input type="checkbox" value="${cheese}" ${order.cheese.includes(cheese) ? 'checked' : ''}> ${cheese}</label>
+                        `).join('')}
+                    </div>
+                    
+                    <label style="display: block; margin: 10px 0; font-weight: bold;">Viandes:</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 10px;">
+                        ${['Lardons', 'Nduja', 'Jambon blanc', 'Jambon cru'].map(meat => `
+                            <label><input type="checkbox" value="${meat}" ${order.meat.includes(meat) ? 'checked' : ''}> ${meat}</label>
+                        `).join('')}
+                    </div>
+                    
+                    <label style="display: block; margin: 10px 0; font-weight: bold;">Extras:</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 10px;">
+                        ${['Miel', 'Huile piquante', 'Huile d\'olive', 'Huile de truffe'].map(extra => `
+                            <label><input type="checkbox" value="${extra}" ${order.extras.includes(extra) ? 'checked' : ''}> ${extra}</label>
+                        `).join('')}
+                    </div>
+                    
+                    <label style="display: block; margin: 10px 0; font-weight: bold;">Instructions spéciales:</label>
+                    <input type="text" id="edit-notes" value="${order.notes || ''}" style="width: 100%; padding: 8px; margin-bottom: 15px;">
+                    
+                    <button class="btn-primary" onclick="saveOrderEdit(${index})">Enregistrer</button>
+                    <button class="btn-secondary" onclick="displayOrders()" style="margin-left: 10px;">Annuler</button>
+                </div>
+            `;
+            
+            document.getElementById('ordersList').innerHTML = editForm;
+        }
+        
+        function saveOrderEdit(index) {
+            const order = orders[index];
+            
+            // Mettre à jour la commande
+            order.dough = document.getElementById('edit-dough').value;
+            order.base = document.getElementById('edit-base').value;
+            order.vegetables = Array.from(document.querySelectorAll('#ordersList input[type="checkbox"]:checked'))
+                .filter(cb => ['Oignons', 'Poivrons', 'Champignons', 'Courgettes', 'Aubergines', 'Artichauts', 'Olives'].includes(cb.value))
+                .map(cb => cb.value);
+            order.cheese = Array.from(document.querySelectorAll('#ordersList input[type="checkbox"]:checked'))
+                .filter(cb => ['Mozzarella', 'Scamorza', 'Provolone', 'Taleggio', 'Parmesan', 'Gruyère', 'Chèvre', 'Fourme d\'Ambert'].includes(cb.value))
+                .map(cb => cb.value);
+            order.meat = Array.from(document.querySelectorAll('#ordersList input[type="checkbox"]:checked'))
+                .filter(cb => ['Lardons', 'Nduja', 'Jambon blanc', 'Jambon cru'].includes(cb.value))
+                .map(cb => cb.value);
+            order.extras = Array.from(document.querySelectorAll('#ordersList input[type="checkbox"]:checked'))
+                .filter(cb => ['Miel', 'Huile piquante', 'Huile d\'olive', 'Huile de truffe'].includes(cb.value))
+                .map(cb => cb.value);
+            order.notes = document.getElementById('edit-notes').value;
+            
+            // Re-trier si nécessaire
+            orders.sort((a, b) => {
+                if (a.dough === 'sans-gluten' && b.dough !== 'sans-gluten') return -1;
+                if (a.dough !== 'sans-gluten' && b.dough === 'sans-gluten') return 1;
+                return 0;
+            });
+            
+            // Rafraîchir l'affichage
+            displayOrders();
+        }
+
+        // Initialisation
+        updateOrderCount();
+    </script>
+</body>
+</html>
